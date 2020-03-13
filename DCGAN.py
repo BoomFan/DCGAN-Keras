@@ -8,6 +8,7 @@ import numpy as np
 import os
 import argparse
 from ast import literal_eval
+from pathlib import Path
 
 from scipy.misc import imsave
 
@@ -149,18 +150,37 @@ class DCGAN:
         self.combined = Model(z, valid)
         self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
 
-    def load_imgs(self, image_path):
+    def load_imgs(self, image_path, image_size=None):
         X_train = []
+        # print("load_imgs: folder_path = ", folder_path)
+        # image_path = folder_path + "/*.png"
+        print("load_imgs: image_path = ", image_path)
+        # print("load_imgs: glob.glob(image_path) = ", glob.glob(image_path))
         for i in glob.glob(image_path):
+            # print("i = ", i)
             img = Image.open(i)
+            if image_size is not None:
+                # print('image_size = ', image_size)
+                img = img.resize(image_size)
+            # print("img = ", img)
             img = np.asarray(img)
+            # print("img.shape = ", img.shape)
+            # if X_train is not None:
+            #     X_train = img
+            # else:
+            #     X_train = np.concatenate((X_train, img), axis=4)
             X_train.append(img)
+        X_train = np.stack(X_train, axis=0)
+        # print("X_train.shape = ", X_train.shape)
         return np.asarray(X_train)
+        # return X_train
 
-    def train(self, epochs, image_path, batch_size=32, save_interval=50):
+    def train(self, epochs, image_path, batch_size=32, image_size=None, save_interval=50):
         self.build_gan()
-        X_train = self.load_imgs(image_path)
-        print("Training Data Shape: ", X_train.shape)
+        # print("image_path = ", image_path)
+        X_train = self.load_imgs(image_path, image_size)
+        # print("X_train = ", X_train)
+        # print("Training Data Shape: ", X_train.shape)
 
         # Rescale images from -1 to 1
         X_train = (X_train.astype(np.float32) - 127.5) / 127.5
@@ -169,14 +189,13 @@ class DCGAN:
 
         for epoch in range(epochs):
 
-
             # Train Generator
             noise = np.random.normal(0, 1, (batch_size, 100))
             g_loss = self.combined.train_on_batch(noise, np.ones((batch_size, 1)))
 
-
-
             # Train Discriminator
+            # print("X_train.shape[0] = ", X_train.shape[0])
+            # print("half_batch = ", half_batch)
             idx = np.random.randint(0, X_train.shape[0], half_batch)
             imgs = X_train[idx]
 
@@ -190,13 +209,11 @@ class DCGAN:
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # Print progress
-            print(f"{epoch} [D loss: {d_loss[0]} | D Accuracy: {100 * d_loss[1]}] [G loss: {g_loss}]")
+            print(epoch, '[D loss:', d_loss[0], '| D Accuracy: ', 100 * d_loss[1], '] [G loss: ', g_loss, ']')
 
             # If at save interval => save generated image samples, save model files
             if epoch % (save_interval) == 0:
-
                 self.save_imgs(epoch)
-
                 save_path = self.output_directory + "/models"
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
@@ -217,23 +234,23 @@ class DCGAN:
         imgs = 0.5 * imgs + 0.5
 
         for i, img_array in enumerate(imgs):
-            path = f"{self.output_directory}/generated_{self.img_size[0]}x{self.img_size[1]}"
+            path = self.output_directory + "/generated_" + str(self.img_size[0]) + "x" + str(self.img_size[1])
             if not os.path.exists(path):
                 os.makedirs(path)
-            imsave(path + f"/{epoch}_{i}.png", img_array)
+            imsave(path + "/epoch_" + str(epoch) + "_" + str(i) + ".png", img_array)
 
         nindex, height, width, intensity = imgs.shape
         nrows = nindex // c
         assert nindex == nrows * c
         # want result.shape = (height*nrows, width*ncols, intensity)
         gallery = (imgs.reshape(nrows, c, height, width, intensity)
-                  .swapaxes(1, 2)
-                  .reshape(height * nrows, width * c, intensity))
+                   .swapaxes(1, 2)
+                   .reshape(height * nrows, width * c, intensity))
 
-        path = f"{self.output_directory}/gallery_generated_{self.img_size[0]}x{self.img_size[1]}"
+        path = self.output_directory + "/gallery_generated_" + str(self.img_size[0]) + "x" + str(self.img_size[1])
         if not os.path.exists(path):
             os.makedirs(path)
-        imsave(path + f"/{epoch}.png", gallery)
+        imsave(path + "/" + str(epoch) + ".png", gallery)
 
     def generate_imgs(self, count, threshold, modifier):
         self.build_gan()
@@ -255,30 +272,61 @@ class DCGAN:
 
         print(imgs.shape)
         for i, img_array in enumerate(imgs):
-            path = f"{self.output_directory}/generated_{threshold[0]}_{threshold[1]}"
+            path = self.output_directory + "/generated_" + str(threshold[0]) + "_" + str(threshold[1])
             if not os.path.exists(path):
                 os.makedirs(path)
-            imsave(path + f"/{modifier}_{i}.png", img_array)
+            imsave(path + "/" + str(modifier) + "_" + str(i) + ".png", img_array)
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--load_generator', help='Path to existing generator weights file', default="../data/models/generat.h5")
-    parser.add_argument('--load_discriminator', help='Path to existing discriminator weights file', default="../data/models/discrim.h5")
-    parser.add_argument('--data', help='Path to directory of images of correct dimensions, using *.[filetype] (e.g. *.png) to reference images', default="../data/resized/paintings_256x/*.png")
-    parser.add_argument('--sample', help='If given, will generate that many samples from existing model instead of training', default=-1)
-    parser.add_argument('--sample_thresholds', help='The values between which a generated image must score from the discriminator', default="(0.0, 0.1)")
-    parser.add_argument('--batch_size', help='Number of images to train on at once', default=24)
-    parser.add_argument('--image_size', help='Size of images as tuple (height,width). Height and width must both be divisible by (2^5)', default="(192, 256)")
-    parser.add_argument('--epochs', help='Number of epochs to train for', default=500000)
-    parser.add_argument('--save_interval', help='How many epochs to go between saves/outputs', default=100)
-    parser.add_argument('--output_directory', help="Directoy to save weights and images to.", default="../data/output/test")
+    parser.add_argument('--load_generator',
+                        help='Path to existing generator weights file',
+                        default="../data/models/generat.h5")
+    parser.add_argument('--load_discriminator',
+                        help='Path to existing discriminator weights file',
+                        default="../data/models/discrim.h5")
+    parser.add_argument('--data',
+                        help='Path to directory of images of correct dimensions, using *.[filetype] (e.g. *.png) to reference images',
+                        default="../data/images/*.png")
+    parser.add_argument('--sample',
+                        help='If given, will generate that many samples from existing model instead of training',
+                        default=-1)
+    parser.add_argument('--sample_thresholds',
+                        help='The values between which a generated image must score from the discriminator',
+                        default="(0.0, 0.1)")
+    # parser.add_argument('--batch_size', help='Number of images to train on at once', default=24)
+    parser.add_argument('--batch_size',
+                        help='Number of images to train on at once',
+                        default=16)
+    # parser.add_argument('--image_size', help='Size of images as tuple (height,width). Height and width must both be divisible by (2^5)', default="(192, 256)")
+    parser.add_argument('--image_size',
+                        help='Size of images as tuple (height,width). Height and width must both be divisible by (2^5)',
+                        default="(128, 128)")
+    parser.add_argument('--epochs',
+                        help='Number of epochs to train for',
+                        default=500000)
+    parser.add_argument('--save_interval',
+                        help='How many epochs to go between saves/outputs',
+                        default=100)
+    parser.add_argument('--output_directory',
+                        help="Directoy to save weights and images to.",
+                        default="../data/output/test")
 
     args = parser.parse_args()
 
-    dcgan = DCGAN(args.load_discriminator, args.load_generator, args.output_directory, literal_eval(args.image_size))
+    dcgan = DCGAN(args.load_discriminator,
+                  args.load_generator,
+                  args.output_directory,
+                  literal_eval(args.image_size))
     if args.sample == -1:
-        dcgan.train(epochs=int(args.epochs), image_path=args.data, batch_size=int(args.batch_size), save_interval=int(args.save_interval))
+        dcgan.train(epochs=int(args.epochs),
+                    image_path=args.data,
+                    batch_size=int(args.batch_size),
+                    image_size=literal_eval(args.image_size),
+                    save_interval=int(args.save_interval))
     else:
-        dcgan.generate_imgs(int(args.sample), literal_eval(args.sample_thresholds), "")
+        dcgan.generate_imgs(int(args.sample),
+                            literal_eval(args.sample_thresholds),
+                            "")

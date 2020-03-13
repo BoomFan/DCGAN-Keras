@@ -2,8 +2,8 @@
 
 ## Introduction
 
-This is a relatively simple Deep Convolutional Generative Adversarial Network built in Keras. Given a dataset of images it will be able 
-to generate new images similar to those in the dataset. It was originally built to generate landscape paintings such 
+This is a relatively simple Deep Convolutional Generative Adversarial Network built in Keras. Given a dataset of images it will be able
+to generate new images similar to those in the dataset. It was originally built to generate landscape paintings such
 as the ones shown below. As a result, also contained are some scripts for collecting artwork from ArtUK and resizing images to make them work with the network. There are also examples of it being trained on Space imagery as well.
 
 ## Model Architecture
@@ -91,25 +91,27 @@ List of paramaters for the DCGAN.py file:
   * e.g. ```100```
 * ```--output_directory```: Directoy to save weights and images to
   * e.g. ```../data/output```
-  
+
  ## Example Usage
- 
+
  ### DCGAN.py
- 
+ To train a fresh model with default hyper parameters:
+  ```python3 DCGAN.py```
+
  To train a fresh model on some data, the following command template is ideal:
- 
- ```python DCGAN.py --data /data/images/*.png --epochs 100000 --output /data/output```
- 
+
+ ```python3 DCGAN.py --data /data/images/*.png --epochs 100000 --output /data/output```
+
  Modifications can be made to image size, batch size etc. using the parameters. If your GPU doesn't have enough memory, you can change the size of the filters within the file, the image size and the batch size to better suit your GPU capability.
- 
+
  ### scrape_imgs.py
- 
+
  In it's current state it will download all of the images on [this ArtUK page]("https://artuk.org/discover/artworks/search/class_title:landscape--category:countryside/page/0"). You can modify the URL given in the file with any page or set of categories on ArtUK and it will download those instead.
- 
+
  ### resize_imgs.py
- 
+
  Will resize any directory of imgs to the specified size and store the new imgs in a different directory
- 
+
  # Licensing
- 
+
  This project is released under the MIT license, see LICENSE.md for more details.
