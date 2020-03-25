@@ -41,7 +41,8 @@ fnames = [os.path.join(origin_class_dir, fname) for fname in os.listdir(origin_c
 # a01245_001_02_3_o.png
 # a01245: This image comes from group "a", which is a combination of 0-5 ppm.
 # 001: The exact ppm of this image is 001ppm
-# 03: This image shows the 03rd pad among all four pads.(top left, top right, bottom left, bottom right)
+# 02: The second sample within group 001
+# 3: This image shows the 03rd pad among all four pads.(top left, top right, bottom left, bottom right)
 # o: Original image
 
 # Stack images into one Numpy array and resize it
@@ -90,6 +91,7 @@ for ind in range(num_loops):
         # a01245_001_02_3_o_r_f_04.png
         # a01245: This image comes from group "a", which is a combination of 0-5 ppm.
         # 001: The exact ppm of this image is 001ppm
+        # 02: The second sample within group 001
         # 03: This image shows the 03rd pad among all four pads.(top left, top right, bottom left, bottom right)
         # o: Original image
         # r: Rotated

@@ -14,14 +14,16 @@ from scipy.misc import imsave
 
 
 class DCGAN:
-    def __init__(self, discriminator_path, generator_path, output_directory, img_size):
+    def __init__(self, discriminator_path, generator_path, epoch_params_path, output_directory, img_size):
         self.img_size = img_size
         self.upsample_layers = 5
         self.starting_filters = 64
         self.kernel_size = 3
         self.channels = 3
+        self.epoch_init_num = 0
         self.discriminator_path = discriminator_path
         self.generator_path = generator_path
+        self.epoch_params_path = epoch_params_path
         self.output_directory = output_directory
 
     def build_generator(self):
@@ -138,6 +140,9 @@ class DCGAN:
 
             self.generator = self.build_generator()
             self.generator.compile(loss='binary_crossentropy', optimizer=optimizer)
+        if os.path.exists(self.epoch_params_path):
+            self.epoch_init_num = np.load(self.epoch_params_path)
+            print('Loading from epoch ', self.epoch_init_num, '...')
 
         # These next few lines setup the training for the GAN model
         z = Input(shape=(100,))
@@ -187,7 +192,10 @@ class DCGAN:
 
         half_batch = batch_size // 2
 
-        for epoch in range(epochs):
+        start_epoch_num = 0
+        if self.epoch_init_num != 0:
+            start_epoch_num = self.epoch_init_num + 1
+        for epoch in range(start_epoch_num, epochs):
 
             # Train Generator
             noise = np.random.normal(0, 1, (batch_size, 100))
@@ -219,6 +227,8 @@ class DCGAN:
                     os.makedirs(save_path)
                 self.discriminator.save(save_path + "/discrim.h5")
                 self.generator.save(save_path + "/generat.h5")
+                # Save the current epoch number
+                np.save(save_path + "/epoch_params", epoch)
 
     def gene_imgs(self, count):
         # Generate images from the currently loaded model
@@ -283,13 +293,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--load_generator',
                         help='Path to existing generator weights file',
-                        default="../data/models/generat.h5")
+                        default="../data/output/test_3AugmentedImages/Class1_aug/models/generat.h5")
     parser.add_argument('--load_discriminator',
                         help='Path to existing discriminator weights file',
-                        default="../data/models/discrim.h5")
+                        default="../data/output/test_3AugmentedImages/Class1_aug/models/discrim.h5")
+    parser.add_argument('--load_epoch_params',
+                        help='Path to existing epoch parameters file',
+                        default="../data/output/test_3AugmentedImages/Class1_aug/models/epoch_params.npy")
+
     parser.add_argument('--data',
                         help='Path to directory of images of correct dimensions, using *.[filetype] (e.g. *.png) to reference images',
-                        default="../data/images/*.png")
+                        default="../data/images/3AugmentedImages/Class1_aug/*.png")
     parser.add_argument('--sample',
                         help='If given, will generate that many samples from existing model instead of training',
                         default=-1)
@@ -306,18 +320,19 @@ if __name__ == '__main__':
                         default="(128, 128)")
     parser.add_argument('--epochs',
                         help='Number of epochs to train for',
-                        default=500000)
+                        default=100000)
     parser.add_argument('--save_interval',
                         help='How many epochs to go between saves/outputs',
-                        default=100)
+                        default=200)
     parser.add_argument('--output_directory',
                         help="Directoy to save weights and images to.",
-                        default="../data/output/test")
+                        default="../data/output/test_3AugmentedImages/Class1_aug")
 
     args = parser.parse_args()
 
     dcgan = DCGAN(args.load_discriminator,
                   args.load_generator,
+                  args.load_epoch_params,
                   args.output_directory,
                   literal_eval(args.image_size))
     if args.sample == -1:
