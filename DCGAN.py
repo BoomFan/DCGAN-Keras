@@ -8,7 +8,6 @@ import numpy as np
 import os
 import argparse
 from ast import literal_eval
-from pathlib import Path
 
 from scipy.misc import imsave
 
@@ -293,17 +292,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--load_generator',
                         help='Path to existing generator weights file',
-                        default="../data/output/test_3AugmentedImages/Class1_aug/models/generat.h5")
+                        default="../data/output/test_3AugmentedImages/Class1/models/generat.h5")
     parser.add_argument('--load_discriminator',
                         help='Path to existing discriminator weights file',
-                        default="../data/output/test_3AugmentedImages/Class1_aug/models/discrim.h5")
+                        default="../data/output/test_3AugmentedImages/Class1/models/discrim.h5")
     parser.add_argument('--load_epoch_params',
                         help='Path to existing epoch parameters file',
-                        default="../data/output/test_3AugmentedImages/Class1_aug/models/epoch_params.npy")
+                        default="../data/output/test_3AugmentedImages/Class1/models/epoch_params.npy")
 
     parser.add_argument('--data',
                         help='Path to directory of images of correct dimensions, using *.[filetype] (e.g. *.png) to reference images',
-                        default="../data/images/3AugmentedImages/Class1_aug/*.png")
+                        default="../data/images/3AugmentedImages/Class1/*.png")
     parser.add_argument('--sample',
                         help='If given, will generate that many samples from existing model instead of training',
                         default=-1)
@@ -326,7 +325,7 @@ if __name__ == '__main__':
                         default=200)
     parser.add_argument('--output_directory',
                         help="Directoy to save weights and images to.",
-                        default="../data/output/test_3AugmentedImages/Class1_aug")
+                        default="../data/output/test_3AugmentedImages/Class1")
 
     args = parser.parse_args()
 

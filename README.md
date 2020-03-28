@@ -1,3 +1,48 @@
+# Overall
+
+This repository is created for Food Safety Project for prediction of heavy metals concentrations in food or water.
+
+We currently tried two algorithms for detection: VGG16 and DCGAN.
+
+Before everything starts, we should first build our dataset. Because our original dataset is small, we should first split it into  `train`, `val`, and `test`, then we can do data augmentation on these split images.
+
+## Split dataset
+Change the dataset path in the `split_dataset.py` file and then:
+```
+python3 split_dataset.py
+```
+
+## Data augmentation
+To run data augmentation on the original dataset, please change the path names and the classes names in the `data_augmentation.py` file and then:
+ ```
+ python3 data_augmentation.py
+ ```
+
+
+# VGG16
+In this section, we tried two different datasets. The first one labeled all images in two classes: ['Class1', 'Class2'] (0~5ppm, 10~30ppm). The second one labeled all images in eight classes: ['000ppm', '001ppm', '002ppm', '004ppm', '005ppm', '010ppm', '020ppm', '030ppm']
+
+## VGG16 in two classes
+
+### Training
+To train a model with VGG16 structure, please check all parameters and the `output_dir` in the `train_vgg16_2classes.py` file. If everything is OK, you may run:
+```
+python3 train_vgg16_2classes.py
+```
+### Plot loss and accuracy
+After the training finished, there should be images showing the accuracy and the loss inside the output directory.
+
+However, if you want to rerun the plotting code, you may do this:
+```
+python3 plot_vgg16_2classes.py
+```
+
+### Testing
+To test the model with our test set:
+```
+python3 test_vgg16_2classes.py
+```
+
 # DCGAN-Keras
 
 ## Introduction
@@ -96,11 +141,15 @@ List of paramaters for the DCGAN.py file:
 
  ### DCGAN.py
  To train a fresh model with default hyper parameters:
-  ```python3 DCGAN.py```
+  ```
+  python3 DCGAN.py
+  ```
 
  To train a fresh model on some data, the following command template is ideal:
 
- ```python3 DCGAN.py --data /data/images/*.png --epochs 100000 --output /data/output```
+ ```
+ python3 DCGAN.py --data /data/images/*.png --epochs 100000 --output /data/output
+ ```
 
  Modifications can be made to image size, batch size etc. using the parameters. If your GPU doesn't have enough memory, you can change the size of the filters within the file, the image size and the batch size to better suit your GPU capability.
 
