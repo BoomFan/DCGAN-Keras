@@ -33,7 +33,32 @@ for split_name in split_folder_names:
     augmented_data_split = os.path.join(augmented_data_dir, split_name)
     if not os.path.exists(augmented_data_split):
         os.mkdir(augmented_data_split)
+
+    # Before we do augmetation, let's find out how many images under each class
+    # Let's call the maximum number num_max.
+    # I need to make 10*num_max augmented images for each class
     # Now to data sugmentation for each class
+    num_max = 0
+    for class_name in class_name_list:
+        origin_class_dir = os.path.join(origin_data_split, class_name)
+        augmented_class_dir = os.path.join(augmented_data_split, class_name)
+        if not os.path.exists(augmented_class_dir):
+            os.mkdir(augmented_class_dir)
+
+        # Using data augmentation
+        datagen = ImageDataGenerator(rotation_range=180,
+                                     width_shift_range=0,
+                                     height_shift_range=0,
+                                     shear_range=0,
+                                     zoom_range=0,
+                                     horizontal_flip=True,
+                                     fill_mode='nearest')
+
+        # Get the file name of original images
+        fnames = [os.path.join(origin_class_dir, fname) for fname in os.listdir(origin_class_dir)]
+        if num_max < len(fnames):
+            num_max = len(fnames)
+
     for class_name in class_name_list:
         origin_class_dir = os.path.join(origin_data_split, class_name)
         augmented_class_dir = os.path.join(augmented_data_split, class_name)
@@ -79,8 +104,8 @@ for split_name in split_folder_names:
                 # print("img_batch.shape = ", img_batch.shape)
                 # print("x.shape = ", x.shape)
 
-        num_loops = 10
-        for ind in range(num_loops):
+        img_aug_num = 10*num_max//len(fnames)
+        for ind in range(img_aug_num):
             # The .flow() command below generates batches of randomly transformed images.
             # It will loop indefinitely, so we need to `break` the loop at some point!
             i = 0
