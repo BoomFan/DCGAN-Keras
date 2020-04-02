@@ -25,7 +25,7 @@ img_width = 200
 test_sample_num = 210
 batch_size = 10
 
-output_dir = '../data/output/VGG16_2classes_all_trainable'
+output_dir = '../data/output/VGG16_2classes_all_new'
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 model_filename = output_dir + '/foodsafety_VGG16_2classes.h5'
