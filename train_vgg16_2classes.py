@@ -216,12 +216,16 @@ callbacks_list = [model_checkpoint, history_checkpoint]
 print('Now training starts!')
 vgg16_history = model.fit_generator(
       train_generator,
-      steps_per_epoch=steps_per_epoch,
       epochs=epochs,
       validation_data=validation_generator,
-      validation_steps=50,
       callbacks=callbacks_list)
-#
+# In model.fit_generator(), there are many parameters we can tune
+# steps_per_epoch= ??  # It is the number of steps per epoch. By default it should be queals to data_num/batchsize, which is len(DataGenerator).
+                       # If we set this number smaller than the default, then each epoch will end earlier.
+# validation_steps=??  # It is the number of data we want to evaluate in each evaluation epoch. By default it should be queals to len(DataGenerator).
+# And there are many more others...
+
+
 # print('appendHist ...')
 # history = appendHist(history, new_history.history)
 
